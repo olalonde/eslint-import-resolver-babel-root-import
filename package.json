@@ -1,0 +1,59 @@
+{
+  "name": "eslint-import-resolver-babel-root-import",
+  "version": "0.0.0",
+  "main": "src/index.js",
+  "description": "babel-plugin-root-import resolver for eslint-plugin-import",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/olalonde/eslint-import-resolver-babel-root-import.git"
+  },
+  "author": {
+    "name": "Olivier Lalonde",
+    "email": "olalonde@gmail.com",
+    "url": "http://syskall.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "eslint",
+    "eslint-plugin-import",
+    "eslint-import-resolver",
+    "babel",
+    "babel-plugin",
+    "module",
+    "babel-root-import",
+    "rewrite",
+    "resolve",
+    "rename",
+    "mapping",
+    "require",
+    "import"
+  ],
+  "dependencies": {
+    "eslint-import-resolver-node": "^0.2.1",
+    "json5": "^0.5.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "condition-circle": "^1.2.0",
+    "eslint": "^2.13.1",
+    "eslint-config-airbnb-base": "^3.0.1",
+    "eslint-plugin-import": "^1.9.2",
+    "lodash": "^4.13.1",
+    "mocha": "^2.5.3",
+    "nyc": "^6.6.1",
+    "babel-root-import": "*"
+  },
+  "release": {
+    "verifyConditions": "condition-circle"
+  },
+  "scripts": {
+    "lint": "eslint src test",
+    "pretest": "npm run lint"
+  },
+  "nyc": {
+    "reporter": [
+      "lcov",
+      "text"
+    ]
+  }
+}
