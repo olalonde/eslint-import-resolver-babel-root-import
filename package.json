@@ -29,6 +29,7 @@
     "import"
   ],
   "dependencies": {
+    "babel-root-import": "^3.2.2",
     "eslint-import-resolver-node": "^0.2.1",
     "json5": "^0.5.0"
   },
@@ -41,14 +42,15 @@
     "lodash": "^4.13.1",
     "mocha": "^2.5.3",
     "nyc": "^6.6.1",
-    "babel-root-import": "*"
+    "tape": "^4.6.0"
   },
   "release": {
     "verifyConditions": "condition-circle"
   },
   "scripts": {
     "lint": "eslint src test",
-    "pretest": "npm run lint"
+    "pretest": "npm run lint",
+    "test": "node test/index.js"
   },
   "nyc": {
     "reporter": [

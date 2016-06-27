@@ -3,7 +3,7 @@
     [
       "babel-root-import",
       {
-        "rootPathSuffix": "src/test",
+        "rootPathSuffix": "test/somepath",
         "rootPathPrefix": "@"
       }
     ],

@@ -3,7 +3,26 @@ const fs = require('fs');
 const JSON5 = require('json5');
 
 const nodeResolve = require('eslint-import-resolver-node').resolve;
-const BabelRootImportHelper = require('babel-root-import/build/helper.js').default;
+
+/* eslint-disable no-console */
+const babelRootImport = require('babel-root-import/build/helper.js');
+
+// newer version of babel root import exports the 2 functions
+// but older versions exported a class
+/* eslint-disable new-cap */
+const babelRootImportObj = babelRootImport.default ?
+    new babelRootImport.default() : babelRootImport;
+
+let {
+    hasRootPathPrefixInString,
+    transformRelativeToRootPath
+} = babelRootImportObj;
+
+if (babelRootImport.default) {
+    /* eslint-disable no-console */
+    hasRootPathPrefixInString = hasRootPathPrefixInString.bind(babelRootImportObj);
+    transformRelativeToRootPath = transformRelativeToRootPath.bind(babelRootImportObj);
+}
 
 // returns the root import config as an object
 function getConfigFromBabel(start) {
@@ -54,9 +73,9 @@ exports.resolve = (source, file, config) => {
     }
 
     let transformedSource = source;
-    if (BabelRootImportHelper().hasRootPathPrefixInString(source, rootPathPrefix)) {
-        transformedSource = BabelRootImportHelper().transformRelativeToRootPath(source, rootPathSuffix, rootPathPrefix);
+    if (hasRootPathPrefixInString(source, rootPathPrefix)) {
+        transformedSource = transformRelativeToRootPath(source, rootPathSuffix, rootPathPrefix);
     }
 
-    return nodeResolve(transformedSource, file, config)
+    return nodeResolve(transformedSource, file, config);
 };
