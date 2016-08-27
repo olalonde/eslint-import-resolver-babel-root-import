@@ -12,6 +12,12 @@
     "email": "olalonde@gmail.com",
     "url": "http://syskall.com"
   },
+  "contributors": [
+    {
+      "name": "Christian Le",
+      "url": "http://christianle.com"
+    }
+  ],
   "license": "MIT",
   "keywords": [
     "eslint",
@@ -59,3 +65,4 @@
     ]
   }
 }
+
