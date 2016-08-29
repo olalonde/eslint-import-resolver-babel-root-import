@@ -28,6 +28,17 @@ if (babelRootImport.default) {
 function getConfigFromBabel(start, babelrc = '.babelrc') {
     if (start === '/') return [];
 
+    const packageJSONPath = path.join(start, babelrc);
+    const packageJSON = require(packageJSONPath);
+    const babelConfig = packageJSON.babel;
+    if (babelConfig) {
+        const pluginConfig = babelConfig.plugins.find(p => {
+            p[0] === 'babel-root-import'
+        });
+        process.chdir(path.dirname(packageJSONPath));
+        return pluginConfig[1];
+    }
+
     const babelrcPath = path.join(start, babelrc);
     if (fs.existsSync(babelrcPath)) {
         const babelrcJson = JSON5.parse(fs.readFileSync(babelrcPath, 'utf8'));
