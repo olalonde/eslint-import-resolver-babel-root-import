@@ -33,7 +33,7 @@ function getConfigFromBabel(start) {
         const babelrcJson = JSON5.parse(fs.readFileSync(babelrc, 'utf8'));
         if (babelrcJson && Array.isArray(babelrcJson.plugins)) {
             const pluginConfig = babelrcJson.plugins.find(p => (
-                p[0] === 'babel-root-import'
+                p[0] === 'babel-plugin-root-import'
             ));
             // The src path inside babelrc are from the root so we have
             // to change the working directory for the same directory
