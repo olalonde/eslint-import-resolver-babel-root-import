@@ -1,6 +1,6 @@
 {
   "name": "eslint-import-resolver-babel-root-import",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "main": "src/index.js",
   "description": "babel-plugin-root-import resolver for eslint-plugin-import",
   "repository": {
@@ -12,6 +12,12 @@
     "email": "olalonde@gmail.com",
     "url": "http://syskall.com"
   },
+  "contributors": [
+    {
+      "name": "Christian Le",
+      "url": "http://christianle.com"
+    }
+  ],
   "license": "MIT",
   "keywords": [
     "eslint",
@@ -59,3 +65,4 @@
     ]
   }
 }
+

@@ -25,12 +25,23 @@ if (babelRootImport.default) {
 }
 
 // returns the root import config as an object
-function getConfigFromBabel(start) {
+function getConfigFromBabel(start, babelrc = '.babelrc') {
     if (start === '/') return [];
 
-    const babelrc = path.join(start, '.babelrc');
-    if (fs.existsSync(babelrc)) {
-        const babelrcJson = JSON5.parse(fs.readFileSync(babelrc, 'utf8'));
+    const packageJSONPath = path.join(start, 'package.json');
+    const packageJSON = require(packageJSONPath);
+    const babelConfig = packageJSON.babel;
+    if (babelConfig) {
+        const pluginConfig = babelConfig.plugins.find(p => (
+            p[0] === 'babel-root-import'
+        ));
+        process.chdir(path.dirname(packageJSONPath));
+        return pluginConfig[1];
+    }
+
+    const babelrcPath = path.join(start, babelrc);
+    if (fs.existsSync(babelrcPath)) {
+        const babelrcJson = JSON5.parse(fs.readFileSync(babelrcPath, 'utf8'));
         if (babelrcJson && Array.isArray(babelrcJson.plugins)) {
             const pluginConfig = babelrcJson.plugins.find(p => (
                 p[0] === 'babel-plugin-root-import'
@@ -38,7 +49,7 @@ function getConfigFromBabel(start) {
             // The src path inside babelrc are from the root so we have
             // to change the working directory for the same directory
             // to make the mapping to work properly
-            process.chdir(path.dirname(babelrc));
+            process.chdir(path.dirname(babelrcPath));
             return pluginConfig[1];
         }
     }
@@ -54,28 +65,60 @@ exports.interfaceVersion = 2;
  * @param  {string} source - the module to resolve; i.e './some-module'
  * @param  {string} file - the importing file's full path; i.e. '/usr/local/bin/file.js'
  * @param  {object} config - the resolver options
+ * @param  {string} babelrc - the name of the babelrc file
  * @return {object}
  */
-exports.resolve = (source, file, config) => {
-    const opts = getConfigFromBabel(process.cwd());
+exports.resolve = (source, file, config, babelrc) => {
+    const opts = getConfigFromBabel(process.cwd(), babelrc);
 
-    let rootPathSuffix = '';
-    let rootPathPrefix = '';
+    // [{rootPathPrefix: rootPathSuffix}]
+    const rootPathConfig = [];
 
-    if (opts.rootPathSuffix && typeof opts.rootPathSuffix === 'string') {
-        rootPathSuffix = `/${opts.rootPathSuffix.replace(/^(\/)|(\/)$/g, '')}`;
-    }
+    if (Array.isArray(opts)) {
+        opts.forEach((option) => {
+            let prefix = '';
+            if (option.rootPathPrefix && typeof option.rootPathPrefix === 'string') {
+                prefix = option.rootPathPrefix;
+            }
 
-    if (opts.rootPathPrefix && typeof opts.rootPathPrefix === 'string') {
-        rootPathPrefix = opts.rootPathPrefix;
+            let suffix = '';
+            if (option.rootPathSuffix && typeof option.rootPathSuffix === 'string') {
+                suffix = `/${option.rootPathSuffix.replace(/^(\/)|(\/)$/g, '')}`;
+            }
+
+            rootPathConfig.push({
+                rootPathPrefix: prefix,
+                rootPathSuffix: suffix
+            });
+        });
     } else {
-        rootPathPrefix = '~';
+        let rootPathPrefix = '~';
+        if (opts.rootPathPrefix && typeof opts.rootPathPrefix === 'string') {
+            rootPathPrefix = opts.rootPathPrefix;
+        }
+
+        let rootPathSuffix = '';
+        if (opts.rootPathSuffix && typeof opts.rootPathSuffix === 'string') {
+            rootPathSuffix = `/${opts.rootPathSuffix.replace(/^(\/)|(\/)$/g, '')}`;
+        }
+
+        rootPathConfig.push({
+            rootPathPrefix,
+            rootPathSuffix
+        });
     }
 
     let transformedSource = source;
-    if (hasRootPathPrefixInString(source, rootPathPrefix)) {
-        transformedSource = transformRelativeToRootPath(source, rootPathSuffix, rootPathPrefix);
+    for (let i = 0; i < rootPathConfig.length; i += 1) {
+        const option = rootPathConfig[i];
+        const prefix = option.rootPathPrefix;
+        const suffix = option.rootPathSuffix;
+        if (hasRootPathPrefixInString(source, option.rootPathPrefix)) {
+            transformedSource = transformRelativeToRootPath(source, suffix, prefix);
+            break;
+        }
     }
 
     return nodeResolve(transformedSource, file, config);
 };
+
