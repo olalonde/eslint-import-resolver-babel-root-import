@@ -46,6 +46,9 @@ function getConfigFromBabel(start, babelrc = '.babelrc') {
             const pluginConfig = babelrcJson.plugins.find(p => (
                 p[0] === 'babel-plugin-root-import'
             ));
+            if (!pluginConfig) {
+                throw new Error("Couldn't find 'babel-plugin-root-import' plugin configuration in .babelrc");
+            }
             // The src path inside babelrc are from the root so we have
             // to change the working directory for the same directory
             // to make the mapping to work properly
