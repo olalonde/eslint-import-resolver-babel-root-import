@@ -29,7 +29,13 @@ your prefix/suffix.
   "rules": {},
   "settings": {
     "import/resolver": {
-      "babel-plugin-root-import": {}
+      "babel-plugin-root-import": {
+        "babelrc": ".customBabelrc",
+        "options": [{
+          "rootPathPrefix": "~",
+          "rootPathSuffix": "src/"
+        }]
+      }
     }
   }
 }
