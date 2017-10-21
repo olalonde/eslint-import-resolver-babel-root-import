@@ -32,7 +32,7 @@ exports.interfaceVersion = 2;
  * @param  {string} file - the importing file's full path; i.e. '/usr/local/bin/file.js'
  * @param  {object} config - the resolver options
  * @param  {string} [config.babelrc] - the path of the babelrc file
- * @param  {string} [config.options] - the options passed to the plugin
+ * @param  {(object|array)} [config.options] - the options passed to the plugin
  * @return {object}
  */
 exports.resolve = (source, file, config) => {
