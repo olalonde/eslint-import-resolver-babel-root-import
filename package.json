@@ -1,6 +1,6 @@
 {
   "name": "eslint-import-resolver-babel-root-import",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "src/index.js",
   "description": "babel-plugin-root-import resolver for eslint-plugin-import",
   "repository": {
@@ -16,6 +16,10 @@
     {
       "name": "Christian Le",
       "url": "http://christianle.com"
+    },
+    {
+      "name": "Yuseong Cho",
+      "email": "gg6123@naver.com"
     }
   ],
   "license": "MIT",
