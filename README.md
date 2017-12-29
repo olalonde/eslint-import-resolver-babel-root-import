@@ -14,7 +14,7 @@ npm install --save-dev eslint-plugin-import eslint-import-resolver-babel-root-im
 Inside your `.eslintrc` file, pass this resolver to `eslint-plugin-import`:
 ```
 "settings": {
-  "import/resolver": "babel-plugin-root-import"
+  "import/resolver": "babel-root-import"
 }
 ```
 
@@ -29,7 +29,7 @@ your prefix/suffix.
   "rules": {},
   "settings": {
     "import/resolver": {
-      "babel-plugin-root-import": {}
+      "babel-root-import": {}
     }
   }
 }
