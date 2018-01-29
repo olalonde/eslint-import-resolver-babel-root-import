@@ -81,7 +81,7 @@ exports.resolve = (source, file, config, babelrc) => {
 
             let suffix = '';
             if (option.rootPathSuffix && typeof option.rootPathSuffix === 'string') {
-                suffix = `/${option.rootPathSuffix.replace(/^(\/)|(\/)$/g, '')}`;
+                suffix = option.rootPathSuffix.replace(/^(\/)|(\/)$/g, '');
             }
 
             rootPathConfig.push({
@@ -97,7 +97,7 @@ exports.resolve = (source, file, config, babelrc) => {
 
         let rootPathSuffix = '';
         if (opts.rootPathSuffix && typeof opts.rootPathSuffix === 'string') {
-            rootPathSuffix = `/${opts.rootPathSuffix.replace(/^(\/)|(\/)$/g, '')}`;
+            rootPathSuffix = opts.rootPathSuffix.replace(/^(\/)|(\/)$/g, '');
         }
 
         rootPathConfig.push({
@@ -116,6 +116,10 @@ exports.resolve = (source, file, config, babelrc) => {
             break;
         }
     }
+
+    // Since babel-plugin-root-import 5.0.0 relative path is now actually relative to the root.
+    // Node resolver expects that path would be relative to file, so we have to resolve it first
+    transformedSource = path.resolve(transformedSource);
 
     return nodeResolve(transformedSource, file, config);
 };
