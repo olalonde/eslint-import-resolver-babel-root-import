@@ -36,15 +36,19 @@
     "import"
   ],
   "dependencies": {
-    "babel-plugin-root-import": "^5.1.0",
     "eslint-import-resolver-node": "^0.2.1",
     "json5": "^0.5.0"
   },
+  "peerDependencies": {
+    "babel-plugin-root-import": "^5.1.0",
+    "eslint-plugin-import": ">=1.9.2"
+  },
   "devDependencies": {
+    "babel-plugin-root-import": "^5.1.0",
     "condition-circle": "^1.2.0",
     "eslint": "^2.13.1",
     "eslint-config-airbnb-base": "^3.0.1",
-    "eslint-plugin-import": "^1.9.2",
+    "eslint-plugin-import": ">=1.9.2",
     "lodash": "^4.13.1",
     "nyc": "^6.6.1",
     "tap-spec": "^4.1.1",
