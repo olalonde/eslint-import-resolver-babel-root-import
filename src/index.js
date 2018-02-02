@@ -3,23 +3,10 @@ const fs = require('fs');
 const JSON5 = require('json5');
 
 const nodeResolve = require('eslint-import-resolver-node').resolve;
-const babelRootImport = require('babel-plugin-root-import/build/helper.js');
-
-// newer version of babel root import exports the 2 functions
-// but older versions exported a class
-const babelRootImportObj = babelRootImport.default
-    ? new babelRootImport.default() // eslint-disable-line new-cap
-    : babelRootImport;
-
-let {
+const {
     hasRootPathPrefixInString,
     transformRelativeToRootPath
-} = babelRootImportObj;
-
-if (babelRootImport.default) {
-    hasRootPathPrefixInString = hasRootPathPrefixInString.bind(babelRootImportObj);
-    transformRelativeToRootPath = transformRelativeToRootPath.bind(babelRootImportObj);
-}
+} = require('babel-plugin-root-import/build/helper.js');
 
 // returns the root import config as an object
 function getConfigFromBabel(start, babelrc = '.babelrc') {
@@ -54,6 +41,10 @@ function getConfigFromBabel(start, babelrc = '.babelrc') {
     return getConfigFromBabel(path.dirname(start));
 }
 
+function isString(value) {
+    return typeof value === 'string';
+}
+
 exports.interfaceVersion = 2;
 
 /**
@@ -67,50 +58,19 @@ exports.interfaceVersion = 2;
  * @return {object}
  */
 exports.resolve = (source, file, config, babelrc) => {
-    const opts = getConfigFromBabel(process.cwd(), babelrc);
-
-    // [{rootPathPrefix: rootPathSuffix}]
-    const rootPathConfig = [];
-
-    if (Array.isArray(opts)) {
-        opts.forEach((option) => {
-            let prefix = '';
-            if (option.rootPathPrefix && typeof option.rootPathPrefix === 'string') {
-                prefix = option.rootPathPrefix;
-            }
-
-            let suffix = '';
-            if (option.rootPathSuffix && typeof option.rootPathSuffix === 'string') {
-                suffix = option.rootPathSuffix.replace(/^(\/)|(\/)$/g, '');
-            }
-
-            rootPathConfig.push({
-                rootPathPrefix: prefix,
-                rootPathSuffix: suffix
-            });
-        });
-    } else {
-        let rootPathPrefix = '~';
-        if (opts.rootPathPrefix && typeof opts.rootPathPrefix === 'string') {
-            rootPathPrefix = opts.rootPathPrefix;
-        }
-
-        let rootPathSuffix = '';
-        if (opts.rootPathSuffix && typeof opts.rootPathSuffix === 'string') {
-            rootPathSuffix = opts.rootPathSuffix.replace(/^(\/)|(\/)$/g, '');
-        }
-
-        rootPathConfig.push({
-            rootPathPrefix,
-            rootPathSuffix
-        });
-    }
+    const optionsRaw = getConfigFromBabel(process.cwd(), babelrc);
+    const opts = [].concat(optionsRaw || []);
+    const rootPathConfig = opts.map((item = {}) => ({
+        rootPathPrefix: isString(item.rootPathPrefix) ? item.rootPathPrefix : '~',
+        rootPathSuffix: isString(item.rootPathSuffix) ? item.rootPathSuffix.replace(/^(\/)|(\/)$/g, '') : ''
+    }));
 
     let transformedSource = source;
     for (let i = 0; i < rootPathConfig.length; i += 1) {
         const option = rootPathConfig[i];
         const prefix = option.rootPathPrefix;
         const suffix = option.rootPathSuffix;
+
         if (hasRootPathPrefixInString(source, option.rootPathPrefix)) {
             transformedSource = transformRelativeToRootPath(source, suffix, prefix);
             break;

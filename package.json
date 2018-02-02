@@ -57,7 +57,7 @@
     "lint": "eslint src test",
     "pretest": "npm run -s lint",
     "test:run": "tape test/index.js",
-    "test:cov": "nyc npm run -s test:run",
+    "test:cov": "nyc tape test/index.js",
     "coverage": "npm run -s test:cov | tap-spec",
     "test": "npm run -s test:run | tap-spec"
   },
