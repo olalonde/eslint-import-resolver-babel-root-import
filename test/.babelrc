@@ -3,9 +3,9 @@
     [
       "babel-plugin-root-import",
       {
-        "rootPathSuffix": "test/somepath",
+        "rootPathSuffix": "modules",
         "rootPathPrefix": "@"
       }
-    ],
+    ]
   ]
 }
