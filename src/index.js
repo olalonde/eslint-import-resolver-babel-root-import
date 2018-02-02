@@ -3,15 +3,13 @@ const fs = require('fs');
 const JSON5 = require('json5');
 
 const nodeResolve = require('eslint-import-resolver-node').resolve;
-
-/* eslint-disable no-console */
 const babelRootImport = require('babel-root-import/build/helper.js');
 
 // newer version of babel root import exports the 2 functions
 // but older versions exported a class
-/* eslint-disable new-cap */
-const babelRootImportObj = babelRootImport.default ?
-    new babelRootImport.default() : babelRootImport;
+const babelRootImportObj = babelRootImport.default
+    ? new babelRootImport.default() // eslint-disable-line new-cap
+    : babelRootImport;
 
 let {
     hasRootPathPrefixInString,
@@ -19,7 +17,6 @@ let {
 } = babelRootImportObj;
 
 if (babelRootImport.default) {
-    /* eslint-disable no-console */
     hasRootPathPrefixInString = hasRootPathPrefixInString.bind(babelRootImportObj);
     transformRelativeToRootPath = transformRelativeToRootPath.bind(babelRootImportObj);
 }
@@ -29,6 +26,7 @@ function getConfigFromBabel(start, babelrc = '.babelrc') {
     if (start === '/') return [];
 
     const packageJSONPath = path.join(start, 'package.json');
+    // eslint-disable-next-line global-require
     const packageJSON = require(packageJSONPath);
     const babelConfig = packageJSON.babel;
     if (babelConfig) {
@@ -44,7 +42,7 @@ function getConfigFromBabel(start, babelrc = '.babelrc') {
         const babelrcJson = JSON5.parse(fs.readFileSync(babelrcPath, 'utf8'));
         if (babelrcJson && Array.isArray(babelrcJson.plugins)) {
             const pluginConfig = babelrcJson.plugins.find(p => (
-                p[0] === 'babel-plugin-root-import'
+                p[0] === 'babel-root-import'
             ));
             // The src path inside babelrc are from the root so we have
             // to change the working directory for the same directory

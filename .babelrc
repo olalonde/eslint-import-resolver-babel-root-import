@@ -1,7 +1,7 @@
 {
   "plugins": [
     [
-      "babel-plugin-root-import",
+      "babel-root-import",
       {
         "rootPathSuffix": "test/somepath",
         "rootPathPrefix": "@"

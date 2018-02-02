@@ -107,12 +107,6 @@ async@~0.2.6:
   version "0.2.10"
   resolved "https://registry.yarnpkg.com/async/-/async-0.2.10.tgz#b6bbe0b0674b9d719708ca38de8c237cb526c3d1"
 
-babel-plugin-root-import@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-root-import/-/babel-plugin-root-import-5.0.0.tgz#2f76fd64bf84a0b5b7a7ba2a2b88ee19b5a8277f"
-  dependencies:
-    slash "^1.0.0"
-
 babel-root-import@^3.2.2:
   version "3.2.2"
   resolved "https://registry.yarnpkg.com/babel-root-import/-/babel-root-import-3.2.2.tgz#43f305790def47192c6d1061d631a94e74fa7389"
