@@ -34,6 +34,14 @@ test('Resolves files required from a file deeper in the tree', (t) => {
     t.end();
 });
 
+test('Correctly resolves default prefix (~/)', (t) => {
+    const result = resolve('~/modules/file', relativeToTestDir('./some/other/file.js'), {}, '.babelrcNoConf');
+    const expected = expectResolvedTo('modules/file.js');
+
+    t.deepEqual(result, expected);
+    t.end();
+});
+
 test('Supports multiple prefixes', (t) => {
     const prefix1 = resolve('@/file', __filename, {}, '.babelrcArray');
     const expected1 = expectResolvedTo('modules/file.js');
@@ -46,6 +54,23 @@ test('Supports multiple prefixes', (t) => {
     t.deepEqual(prefix2, expected2);
     t.end();
 });
+
+test('Can read configuration from package.json when no .babelrc found', (t) => {
+    const actual = resolve('@/file', __filename, {}, '.babelrcNonexistent');
+    const expected = expectResolvedTo('modules/file.js');
+
+    t.deepEqual(actual, expected);
+    t.end();
+});
+
+// Too early for this one
+// test('Does nothing when babel plugin not listed in .babelrc', (t) => {
+//     const result = resolve('~/modules/file', __filename, {}, '.babelrcNotListed');
+//     const expected = expectResolvedTo(false);
+//
+//     t.deepEqual(result, expected);
+//     t.end();
+// });
 
 test('Should not resolve file that doesn\'t exists', (t) => {
     const prefix1 = resolve('@/nonexistent', __filename, {});

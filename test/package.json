@@ -1,4 +1,11 @@
 {
   "private": true,
-  "description": "Currently has to be present next to .babelrc file"
+  "babel": {
+    "plugins": [
+      [ "babel-plugin-root-import", {
+        "rootPathSuffix": "modules/",
+        "rootPathPrefix": "@"
+      } ]
+    ]
+  }
 }
