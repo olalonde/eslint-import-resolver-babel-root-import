@@ -1,59 +1,53 @@
 const path = require('path');
 const fs = require('fs');
 const JSON5 = require('json5');
-
 const nodeResolve = require('eslint-import-resolver-node').resolve;
-
-/* eslint-disable no-console */
-const babelRootImport = require('babel-root-import/build/helper.js');
-
-// newer version of babel root import exports the 2 functions
-// but older versions exported a class
-/* eslint-disable new-cap */
-const babelRootImportObj = babelRootImport.default ?
-    new babelRootImport.default() : babelRootImport;
-
-let {
+const {
     hasRootPathPrefixInString,
     transformRelativeToRootPath
-} = babelRootImportObj;
+} = require('babel-plugin-root-import/build/helper.js');
 
-if (babelRootImport.default) {
-    /* eslint-disable no-console */
-    hasRootPathPrefixInString = hasRootPathPrefixInString.bind(babelRootImportObj);
-    transformRelativeToRootPath = transformRelativeToRootPath.bind(babelRootImportObj);
+function isString(value) {
+    return typeof value === 'string';
 }
 
-// returns the root import config as an object
-function getConfigFromBabel(start, babelrc = '.babelrc') {
-    if (start === '/') return [];
+// returns the root import config as an object. Or an array
+function getConfigFromBabel(directory, babelrcName = '.babelrc') {
+    const babelrcPath = babelrcName && path.join(directory, babelrcName);
+    let babelConfig = babelrcPath && fs.existsSync(babelrcPath)
+        ? JSON5.parse(fs.readFileSync(babelrcPath, 'utf8'))
+        : null;
 
-    const packageJSONPath = path.join(start, 'package.json');
-    const packageJSON = require(packageJSONPath);
-    const babelConfig = packageJSON.babel;
-    if (babelConfig) {
-        const pluginConfig = babelConfig.plugins.find(p => (
-            p[0] === 'babel-root-import'
-        ));
-        process.chdir(path.dirname(packageJSONPath));
-        return pluginConfig[1];
+    // look for "babel" hash within package.json if didn't find .babelrc file
+    const packageJSONPath = path.join(directory, 'package.json');
+    if (!babelConfig && fs.existsSync(packageJSONPath)) {
+        const packageJSON = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8'));
+        babelConfig = packageJSON.babel || babelConfig;
     }
 
-    const babelrcPath = path.join(start, babelrc);
-    if (fs.existsSync(babelrcPath)) {
-        const babelrcJson = JSON5.parse(fs.readFileSync(babelrcPath, 'utf8'));
-        if (babelrcJson && Array.isArray(babelrcJson.plugins)) {
-            const pluginConfig = babelrcJson.plugins.find(p => (
-                p[0] === 'babel-plugin-root-import'
-            ));
-            // The src path inside babelrc are from the root so we have
-            // to change the working directory for the same directory
-            // to make the mapping to work properly
-            process.chdir(path.dirname(babelrcPath));
-            return pluginConfig[1];
+    if (babelConfig !== null && typeof babelConfig === 'object') {
+        const plugins = Array.isArray(babelConfig.plugins) ? babelConfig.plugins : [];
+        const babelPluginEntry = plugins.find(entry => {
+            const pluginName = isString(entry) ? entry : entry[0];
+            return pluginName === 'babel-plugin-root-import' || pluginName === 'root-import';
+        });
+
+        if (!babelPluginEntry) {
+            return null;
         }
+
+        // The src path inside babelrc are from the root so we have
+        // to change the working directory for the same directory
+        // to make the mapping to work properly
+        // Note: maybe it would be better to resolve suffixes here, relative to directory
+        process.chdir(directory);
+
+        return isString(babelPluginEntry) ? [] : babelPluginEntry[1] || [];
     }
-    return getConfigFromBabel(path.dirname(start));
+
+    /* istanbul ignore next: can't control presence of config file at root directory */
+    if (directory === '/' || directory.substr(1) === ':\\') return [];
+    return getConfigFromBabel(path.dirname(directory));
 }
 
 exports.interfaceVersion = 2;
@@ -69,55 +63,36 @@ exports.interfaceVersion = 2;
  * @return {object}
  */
 exports.resolve = (source, file, config, babelrc) => {
-    const opts = getConfigFromBabel(process.cwd(), babelrc);
+    const optionsRaw = getConfigFromBabel(process.cwd(), babelrc);
+    const opts = [].concat(optionsRaw || []);
 
-    // [{rootPathPrefix: rootPathSuffix}]
-    const rootPathConfig = [];
-
-    if (Array.isArray(opts)) {
-        opts.forEach((option) => {
-            let prefix = '';
-            if (option.rootPathPrefix && typeof option.rootPathPrefix === 'string') {
-                prefix = option.rootPathPrefix;
-            }
-
-            let suffix = '';
-            if (option.rootPathSuffix && typeof option.rootPathSuffix === 'string') {
-                suffix = `/${option.rootPathSuffix.replace(/^(\/)|(\/)$/g, '')}`;
-            }
-
-            rootPathConfig.push({
-                rootPathPrefix: prefix,
-                rootPathSuffix: suffix
-            });
-        });
-    } else {
-        let rootPathPrefix = '~';
-        if (opts.rootPathPrefix && typeof opts.rootPathPrefix === 'string') {
-            rootPathPrefix = opts.rootPathPrefix;
-        }
-
-        let rootPathSuffix = '';
-        if (opts.rootPathSuffix && typeof opts.rootPathSuffix === 'string') {
-            rootPathSuffix = `/${opts.rootPathSuffix.replace(/^(\/)|(\/)$/g, '')}`;
-        }
-
-        rootPathConfig.push({
-            rootPathPrefix,
-            rootPathSuffix
-        });
+    if (optionsRaw === null) {
+        return nodeResolve(source, file, config);
     }
+
+    // This empty object becomes default '~/` prefix mapped to root during the next step
+    if (opts.length === 0) opts.push({});
+
+    const rootPathConfig = opts.map((item = {}) => ({
+        rootPathPrefix: isString(item.rootPathPrefix) ? item.rootPathPrefix : '~',
+        rootPathSuffix: isString(item.rootPathSuffix) ? item.rootPathSuffix.replace(/^(\/)|(\/)$/g, '') : ''
+    }));
 
     let transformedSource = source;
     for (let i = 0; i < rootPathConfig.length; i += 1) {
         const option = rootPathConfig[i];
         const prefix = option.rootPathPrefix;
         const suffix = option.rootPathSuffix;
-        if (hasRootPathPrefixInString(source, option.rootPathPrefix)) {
+
+        if (hasRootPathPrefixInString(source, prefix)) {
             transformedSource = transformRelativeToRootPath(source, suffix, prefix);
             break;
         }
     }
+
+    // Since babel-plugin-root-import 5.0.0 relative path is now actually relative to the root.
+    // Node resolver expects that path would be relative to file, so we have to resolve it first
+    transformedSource = path.resolve(transformedSource);
 
     return nodeResolve(transformedSource, file, config);
 };

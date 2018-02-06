@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "babel": {
+    "plugins": [
+      [ "babel-plugin-root-import", {
+        "rootPathSuffix": "modules/",
+        "rootPathPrefix": "@"
+      } ]
+    ]
+  }
+}
