@@ -34,11 +34,13 @@ test('Resolves files required from a file deeper in the tree', (t) => {
     t.end();
 });
 
-test('Correctly resolves default prefix (~/)', (t) => {
+test('Correctly resolves default prefix (~/) when no configuration provided', (t) => {
     const result = resolve('~/modules/file', relativeToTestDir('./some/other/file.js'), {}, '.babelrcNoConf');
+    const result2 = resolve('~/modules/file', relativeToTestDir('./some/other/file.js'), {}, '.babelrcNoConfArray');
     const expected = expectResolvedTo('modules/file.js');
 
-    t.deepEqual(result, expected);
+    t.deepEqual(result, expected, 'When plugin listed as a string');
+    t.deepEqual(result2, expected, 'When plugin listed in array form with no config');
     t.end();
 });
 
@@ -55,6 +57,14 @@ test('Supports multiple prefixes', (t) => {
     t.end();
 });
 
+test('Can find plugin configuration by a shorthand (root-import) in babel config', (t) => {
+    const resolved = resolve('@/file', __filename, {}, '.babelrcShorthand');
+    const expected = expectResolvedTo('modules/anotherpath/file.js');
+
+    t.deepEqual(resolved, expected);
+    t.end();
+});
+
 test('Can read configuration from package.json when no .babelrc found', (t) => {
     const actual = resolve('@/file', __filename, {}, '.babelrcNonexistent');
     const expected = expectResolvedTo('modules/file.js');
@@ -63,14 +73,28 @@ test('Can read configuration from package.json when no .babelrc found', (t) => {
     t.end();
 });
 
-// Too early for this one
-// test('Does nothing when babel plugin not listed in .babelrc', (t) => {
-//     const result = resolve('~/modules/file', __filename, {}, '.babelrcNotListed');
-//     const expected = expectResolvedTo(false);
-//
-//     t.deepEqual(result, expected);
-//     t.end();
-// });
+test('Skips package.json with no "babel" hash in it', (t) => {
+    const oldCwd = process.cwd();
+    const fromFile = relativeToTestDir('lookup/submodule/lib/path.js');
+
+    process.chdir(relativeToTestDir('lookup/submodule/lib/'));
+
+    const actual = resolve('@/file', fromFile, {});
+    const expected = expectResolvedTo('modules/file.js');
+
+    process.chdir(oldCwd);
+
+    t.deepEqual(actual, expected);
+    t.end();
+});
+
+test('Does nothing when babel plugin not listed in .babelrc', (t) => {
+    const result = resolve('~/modules/file', __filename, {}, '.babelrcNotListed');
+    const expected = expectResolvedTo(false);
+
+    t.deepEqual(result, expected);
+    t.end();
+});
 
 test('Should not resolve file that doesn\'t exists', (t) => {
     const prefix1 = resolve('@/nonexistent', __filename, {});
